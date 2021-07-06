@@ -1,49 +1,171 @@
-from os import system, name
+import random
+from dictionary import word_list
 
 
-# define our clear function
-def clear():
-    # for windows the name is 'nt'
-    if name == 'nt':
-        _ = system('cls')
-
-    # and for mac and linux, the os.name is 'posix'
-    else:
-        _ = system('clear')
+def get_word():
+    word_chosen = random.choice(word_list)
+    return word_chosen.lower()
 
 
-"""For this assignment, we want to play hangman in 2-player mode.
-The game should start by prompting player 1 to pick a word.
-Then the screen should clear itself so that player 2 can't see the word
-hint: print(chr(27) + "[2J")
+def play(picked_word):
+    dashes = "_" * len(picked_word)  # displays dashed according to the length of the selected work
+    # dashes string->list to assign a guessed letter at the corresponding position
+    dashes_as_list = list(dashes)
+    tries = 7
+    word_guessed = False # initially guessed word is set to False.resets to True when the word is guessed correct
+    guessed_letters=[] # list of the guessed letter
 
-After the screen is clear, the "gallows" and the empty letter spaces should be drawn, and player 2 should be allowed 
-to guess letters until they either win, or lose. As they choose correct letters, the letters should appear on the 
-screen in place of the blank space (clear and redraw the whole screen). As they choose wrong letters, 
-the "man" himself should come end up being drawn, piece by piece. How many guesses they get before losing is up to 
-you (depending on how complicated of a man you want to draw). """
-
-words = ["judy", "voke"]
-picked_word = input("player 1 please pick a word ")
-dashes = "_" * len(picked_word)  # displays dashed according to the length of the selected work
-# dashes string->list to assign a guessed letter at the corresponding position
-dashes_as_list = list(dashes)
-print(dashes)
-
-while True:
-    guessed_letter = input("guess a letter for player 1  word ")
-
-    # returns a list of index/positions with the guessed letter
-    indices = [i for i, letter in enumerate(picked_word) if letter == guessed_letter]
-
-    # loop thru the above list of indices and assign
-    # the  guesses letter in their respective positions
-    # on the dashes list(dashes_as_list)
-    for index in indices:
-        dashes_as_list[index] = guessed_letter
-    # join the list into a string using the join()
-    dashes = "".join(dashes_as_list)
+    print("Let's play Hangman!")
+    player = int(input("please select a player: "))
+    print(display_hangman(tries))  # image for the game
     print(dashes)
+
+    while not word_guessed and tries > 0:
+        if player == 1:
+            guessed_letter = input(f"player {player}  please guess a letter for player 2's  word ").lower()
+        else:
+            guessed_letter = input(f"player {player}  please guess a letter for player 1's  word ").lower()
+
+        if len(guessed_letter) == 1 and guessed_letter.isalpha():  # for single alphabet entry
+            if guessed_letter in guessed_letters:
+                print("you already guessed this letter")
+                print(f"my guess list so far{guessed_letters}")
+
+            elif guessed_letter not in picked_word and guessed_letter not in guessed_letters:
+                print(f" {guessed_letter} not in the word. try again")
+                guessed_letters.append(guessed_letter)
+                print(display_hangman(tries))
+
+            else:
+                print("Bingo,the letter is in the word!")
+                guessed_letters.append(guessed_letter)
+                indices = [i for i, letter in enumerate(picked_word) if letter == guessed_letter]  # returns a list of
+                # index/positions with the guessed letter
+                for index in indices:  # loop through the above list of indices
+                    dashes_as_list[
+                        index] = guessed_letter  # and assign,the  guesses letter in their respective positions
+                # on the dashes list(dashes_as_list)
+                dashes = "".join(dashes_as_list)  # join the list into a string using the join()
+                print(dashes)
+                if "_" not in dashes:  # if dashes are filled set word_guessed to True
+                    word_guessed = True
+
+        elif len(guessed_letter) == len(picked_word) and guessed_letter.isalpha():  # for whole word entry
+            if guessed_letter == picked_word:
+                word_guessed = True
+                print("right on spot")
+            else:
+                print("that's not the correct word try again")
+                print(display_hangman(tries))
+
+        else:
+            print("invalid entry try again")
+            print(display_hangman(tries))
+
+        tries -= 1
+    if word_guessed:
+        print("well done")
+    else:
+        print("you have run out of tries")
+        print(f"{word} was the word")
+
+
+def display_hangman(tries):
+    stages = [  # final state: head, torso, both arms, and both legs
+        """
+                   --------
+                   |      |
+                   |      O
+                   |     \\|/
+                   |      |
+                   |     / \\
+                   -
+                """,
+        # head, torso, both arms, and one leg
+        """
+                   --------
+                   |      |
+                   |      O
+                   |     \\|/
+                   |      |
+                   |     / 
+                   -
+                """,
+        # head, torso, and both arms
+        """
+                   --------
+                   |      |
+                   |      O
+                   |     \\|/
+                   |      |
+                   |      
+                   -
+                """,
+        # head, torso, and one arm
+        """
+                   --------
+                   |      |
+                   |      O
+                   |     \\|
+                   |      |
+                   |     
+                   -
+                """,
+        # head and torso
+        """
+                   --------
+                   |      |
+                   |      O
+                   |      |
+                   |      |
+                   |     
+                   -
+                """,
+        # head and neck
+        """
+                   --------
+                   |      |
+                   |      O
+                   |      |    
+                   |      
+                   |     
+                   -
+                """,
+        # head
+        """
+                   --------
+                   |      |
+                   |      O
+                   |         
+                   |      
+                   |     
+                   -
+                """,
+        # initial empty state
+        """
+                   --------
+                   |      |
+                   |      
+                   |    
+                   |      
+                   |     
+                   -
+                """
+    ]
+    return stages[tries]
+
+
+word = get_word()
+# word = input("player 1 please pick a word ")
+play(word)
+play_again=input("would you like to play again (y/n)?")
+if play_again!="n" :
+    word = get_word()
+    play(word)
+else:
+    print(" Game over")
+
+
 
 
 
